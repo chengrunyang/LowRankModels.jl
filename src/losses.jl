@@ -39,7 +39,7 @@ import Base: scale!, *, convert
 import Optim: optimize, LBFGS
 export Loss,
        DiffLoss, ClassificationLoss, SingleDimLoss, # categories of Losses
-       QuadLoss, L1Loss, HuberLoss, QuantileLoss, # losses for predicting reals
+       QuadLoss, QuadExpLoss, L1Loss, HuberLoss, QuantileLoss, # losses for predicting reals
        PoissonLoss, # losses for predicting integers
        HingeLoss, WeightedHingeLoss, LogisticLoss, # losses for predicting booleans
        OrdinalHingeLoss, OrdisticLoss, MultinomialOrdinalLoss, BvSLoss, # losses for predicting ordinals
@@ -145,6 +145,20 @@ evaluate(l::QuadLoss, u::Float64, a::Number) = l.scale*(u-a)^2
 grad(l::QuadLoss, u::Float64, a::Number) = 2*(u-a)*l.scale
 
 M_estimator(l::QuadLoss, a::AbstractArray) = mean(a)
+
+########################################## QUADRATIC_EXPONENTIAL ##########################################
+# f: ℜxℜ -> ℜ
+type QuadExpLoss<:DiffLoss
+    scale::Float64
+    domain::Domain
+end
+QuadExpLoss(scale=1.0::Float64; domain=RealDomain()) = QuadExpLoss(scale, domain)
+
+evaluate(l::QuadExpLoss, u::Float64, a::Number) = l.scale*(u-a)^2*exp(-a)
+
+grad(l::QuadExpLoss, u::Float64, a::Number) = 2*(u-a)*exp(-a)*l.scale
+
+# M_estimator(l::QuadLoss, a::AbstractArray) = mean(a) hard to compute 
 
 ########################################## L1 ##########################################
 # f: ℜxℜ -> ℜ
